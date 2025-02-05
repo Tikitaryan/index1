@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Color Guessing Game</title>
+    <style>
+      body {
+        font-family: calibri;
+        text-align: center;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 50px auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      #colorBox {
+        width: 150px;
+        height: 150px;
+        margin: 20px auto;
+        border: 3px solid #000;
+      }
+
+      #optionsContainer {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .colorOption {
+        width: 80px;
+        height: 80px;
+        border: none;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+        border-radius: 5px;
+      }
+
+      .colorOption:hover {
+        transform: scale(1.1);
+      }
+
+      .correct {
+        animation: correctAnim 0.5s ease;
+      }
+
+      @keyframes correctAnim {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.2);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .wrong {
+        animation: fadeOut 0.5s ease;
+      }
+
+      @keyframes fadeOut {
+        0% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+
+      button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        cursor: pointer;
+        font-size: 16px;
+        border-radius: 5px;
+        margin-top: 20px;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 600px) {
+        .colorOption {
+          width: 60px;
+          height: 60px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Color Guessing Game</h1>
+      <p data-testid="gameInstructions">
+        PICK THE OPTION THAT MATCHES THE TARGET COLOR!
+      </p>
+      <div id="colorBox" data-testid="colorBox"></div>
+      <div id="optionsContainer"></div>
+      <p id="gameStatus" data-testid="gameStatus"></p>
+      <p>Score: <span id="score" data-testid="score">0</span></p>
+      <button id="newGameButton" data-testid="newGameButton">New Game</button>
+    </div>
+
+    <script>
+      let targetColor;
+      let score = 0;
+
+      const colorBox = document.getElementById("colorBox");
+      const optionsContainer = document.getElementById("optionsContainer");
+      const gameStatus = document.getElementById("gameStatus");
+      const scoreDisplay = document.getElementById("score");
+      const newGameButton = document.getElementById("newGameButton");
+
+      // Function to generate a random color in RGB format
+      function randomColor() {
+        const r = Math.floor(Math.random() * 256);
+        const g = Math.floor(Math.random() * 256);
+        const b = Math.floor(Math.random() * 256);
+        return `rgb(${r}, ${g}, ${b})`;
+      }
+
+      // Function to generate similar color shades based on the target color
+      function generateSimilarColors(baseColor, count) {
+        const baseRGB = baseColor.match(/\d+/g).map(Number);
+        const colors = [baseColor];
+
+        for (let i = 1; i < count; i++) {
+          let r = Math.min(
+            255,
+            Math.max(0, baseRGB[0] + (Math.random() * 50 - 25))
+          );
+          let g = Math.min(
+            255,
+            Math.max(0, baseRGB[1] + (Math.random() * 50 - 25))
+          );
+          let b = Math.min(
+            255,
+            Math.max(0, baseRGB[2] + (Math.random() * 50 - 25))
+          );
+          colors.push(
+            `rgb(${Math.floor(r)}, ${Math.floor(g)}, ${Math.floor(b)})`
+          );
+        }
+
+        return colors;
+      }
+
+      function startGame() {
+        gameStatus.textContent = "";
+        targetColor = randomColor();
+        colorBox.style.backgroundColor = targetColor;
+
+        optionsContainer.innerHTML = "";
+
+        // Generate 6 similar color options, including the correct one
+        const colorOptions = generateSimilarColors(targetColor, 6);
+        colorOptions.sort(() => Math.random() - 0.5); // Shuffle colors
+
+        colorOptions.forEach((color) => {
+          const button = document.createElement("button");
+          button.classList.add("colorOption");
+          button.dataset.testid = "colorOption";
+          button.style.backgroundColor = color;
+          button.onclick = () => checkGuess(color, button);
+          optionsContainer.appendChild(button);
+        });
+      }
+
+      function checkGuess(selectedColor, button) {
+        if (selectedColor === targetColor) {
+          score++;
+          gameStatus.textContent = "Correct!";
+          gameStatus.style.color = "green";
+          button.classList.add("correct");
+        } else {
+          gameStatus.textContent = "Wrong! Try again.";
+          gameStatus.style.color = "red";
+          button.classList.add("wrong");
+          setTimeout(() => button.classList.remove("wrong"), 500);
+        }
+        scoreDisplay.textContent = score;
+        setTimeout(startGame, 1000);
+      }
+
+      newGameButton.addEventListener("click", () => {
+        score = 0;
+        scoreDisplay.textContent = score;
+        startGame();
+      });
+
+      startGame();
+    </script>
+  </body>
+</html>
